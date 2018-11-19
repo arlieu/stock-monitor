@@ -1,16 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="5f05cd2e-eba7-4b36-97da-a4ef9c71203e" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/vcs.xml" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/stock_graphql_api/stocks/serializer.py" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/stock-monitor.iml" afterPath="$PROJECT_DIR$/.idea/stock-monitor.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/crawler/stock_crawler.py" afterPath="$PROJECT_DIR$/crawler/stock_crawler.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/stock_graphql_api/stocks/models.py" afterPath="$PROJECT_DIR$/stock_graphql_api/stocks/models.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/stock_graphql_api/stocks/schema.py" afterPath="$PROJECT_DIR$/stock_graphql_api/stocks/schema.py" />
-    </list>
+    <list default="true" id="5f05cd2e-eba7-4b36-97da-a4ef9c71203e" name="Default" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
