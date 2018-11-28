@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 
 echo schtasks /run /tn "python stock_graphql_api/manage.py makemigrations &&
     python stock_graphql_api/manage.py migrate && python stock_graphql_api/manage.py runserver"

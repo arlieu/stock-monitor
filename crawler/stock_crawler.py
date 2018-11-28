@@ -18,7 +18,7 @@ class StockCrawler:
         self.stocksList = []
         self.url = "http://www.nasdaq.com/symbol/"
         self.urlSet = set()
-        for line in open('../resources/input.txt'):
+        for line in open("resources/input.txt"):
             line = line.strip()
             ticker = line.split(',')[0]
             self.urlSet.add(self.url + ticker)
@@ -81,13 +81,20 @@ class StockCrawler:
             stockDictionary["fields"]["symbol"] = symbol
             self.stocksList.append(stockDictionary)
             count += 1
-            # if count > 50:
+            # if count > 10:
             #     break
             print("Done!")
 
         print("\n------------------------------------------\n\nAll stocks loaded!\n")
-        currentDateTime = str(datetime.datetime.now()).replace(" ", ":")
-        with open('../resources/output-%s.json' % currentDateTime, 'w') as fp:
+        currentDateTime = datetime.datetime.now()
+        with open("resources/output-%d-%d-%d_%d-%d-%d.json" %
+                  (currentDateTime.year,
+                   currentDateTime.month,
+                   currentDateTime.day,
+                   currentDateTime.hour,
+                   currentDateTime.minute,
+                   currentDateTime.microsecond),
+                  'w') as fp:
             json.dump(self.stocksList, fp, indent=4, ensure_ascii=False, cls=DjangoJSONEncoder)
         print("View 'resources/output-%s.json' for results" % currentDateTime)
 
