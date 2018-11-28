@@ -69,23 +69,27 @@ class StockCrawler:
 
         self.model = "stocks.Stock"
         count = 1
+
+        print("Scanning the S&P 500\n")
         for url in self.urlSet:
             symbol = url.split('/')[-1]
-            print("Processing " + symbol + "(" + str(count) + "/500)" + "...", end=" ")
+            print("Processing " + symbol + " (" + str(count) + "/505)" + "...", end=" ")
             stockDictionary = {}
             stockDictionary["pk"] = symbol
             stockDictionary["model"] = self.model
             stockDictionary["fields"] = self.parse(self.openSite(url).text)
+            stockDictionary["fields"]["symbol"] = symbol
             self.stocksList.append(stockDictionary)
             count += 1
             # if count > 50:
             #     break
             print("Done!")
 
-        print("------------------------------------------\nAll stocks loaded\n")
-        with open('../resources/output.json', 'w') as fp:
+        print("\n------------------------------------------\n\nAll stocks loaded!\n")
+        currentDateTime = str(datetime.datetime.now()).replace(" ", ":")
+        with open('../resources/output-%s.json' % currentDateTime, 'w') as fp:
             json.dump(self.stocksList, fp, indent=4, ensure_ascii=False, cls=DjangoJSONEncoder)
-        print("View 'resources/output.json' for results")
+        print("View 'resources/output-%s.json' for results" % currentDateTime)
 
     def openSite(self, url):
         try:
@@ -113,6 +117,8 @@ class StockCrawler:
         elif transform == DataType.DATE:
             dateParts = list(map(int, value.split('/')))
             return datetime.date(dateParts[2], dateParts[0], dateParts[1])
+        else:
+            return None
 
     def parse(self, data):
         parser = html.fromstring(data)
@@ -138,7 +144,7 @@ class StockCrawler:
 
         nasdaq_data = {
             "name": company_name,
-            "open_price": (open_price) if open_price is not None else None,
+            "open_price": float(open_price) if open_price is not None else None,
             "close_price": float(close_price) if open_price is not None else None,
         }
 
@@ -167,19 +173,22 @@ class StockCrawler:
 
             if value1 is None:
                 trueKey = self.transformKey(key)
-                try:
-                    nasdaq_data[trueKey] = self.transformValue(trueKey, value)
-                except Exception as e:
-                    nasdaq_data[trueKey] = None
+                if trueKey is not None:
+                    try:
+                        nasdaq_data[trueKey] = self.transformValue(trueKey, value)
+                    except Exception as e:
+                        nasdaq_data[trueKey] = None
             else:
-                try:
-                    nasdaq_data[key1] = self.transformValue(key1, value1)
-                except Exception as e1:
-                    nasdaq_data[key1] = None
-                try:
-                    nasdaq_data[key2] = self.transformValue(key2, value2)
-                except Exception as e2:
-                    nasdaq_data[key2] = None
+                if key1 is not None:
+                    try:
+                        nasdaq_data[key1] = self.transformValue(key1, value1)
+                    except Exception as e1:
+                        nasdaq_data[key1] = None
+                if key2 is not None:
+                    try:
+                        nasdaq_data[key2] = self.transformValue(key2, value2)
+                    except Exception as e2:
+                        nasdaq_data[key2] = None
 
         return nasdaq_data
 
