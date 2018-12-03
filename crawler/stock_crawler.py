@@ -86,7 +86,7 @@ class StockCrawler:
             print("Done!")
 
         print("\n------------------------------------------\n\nAll stocks loaded!\n")
-        currentDateTime = datetime.datetime.now()
+        # currentDateTime = datetime.datetime.now()
         # with open("resources/output-%d-%d-%d_%d-%d-%d.json" %
         #           (currentDateTime.year,
         #            currentDateTime.month,
@@ -96,9 +96,9 @@ class StockCrawler:
         #            currentDateTime.microsecond),
         #           'w') as fp:
         #     json.dump(self.stocksList, fp, indent=4, ensure_ascii=False, cls=DjangoJSONEncoder)
+        # print("View 'resources/output-%s.json' for results" % currentDateTime)
         with open("resources/output.json", 'w') as fp:
             json.dump(self.stocksList, fp, indent=4, ensure_ascii=False, cls=DjangoJSONEncoder)
-        # print("View 'resources/output-%s.json' for results" % currentDateTime)
         print("View 'resources/output.json' for results")
 
     def openSite(self, url):
