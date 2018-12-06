@@ -1,0 +1,52 @@
+# Domake.io i18n
+# Copyright (C) mongkok 2018
+# This file is distributed under the same license as the django-graphql-jwt package.
+# Translators:
+# mongkok <domake.io@gmail.com>, 2018.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Django GraphQL JWT\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-01-19 03:45+0530\n"
+"PO-Revision-Date: 2018-01-05 16:20+0000\n"
+"Last-Translator: mongkok <domake.io@gmail.com>\n"
+"Language-Team: Spanish\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: decorators.py:25
+msgid "Please, enter valid credentials"
+msgstr "Por favor, introduce unas credenciales válidas"
+
+#: mixins.py:61
+msgid "Refresh has expired"
+msgstr "El refresco ha expirado"
+
+#: mixins.py:63
+msgid "orig_iat field is required"
+msgstr "El campo orig_iat es requerido"
+
+#: utils.py:71
+msgid "Signature has expired"
+msgstr "La firma ha expirado"
+
+#: utils.py:73
+msgid "Error decoding signature"
+msgstr "Error decodificando la firma"
+
+#: utils.py:75
+msgid "Invalid token"
+msgstr "Token inválido"
+
+#: utils.py:91
+msgid "Invalid payload"
+msgstr "Payload inválido"
+
+#: utils.py:96
+msgid "User is disabled"
+msgstr "Usuario deshabilitado"
