@@ -10,20 +10,18 @@ if __name__ == "__main__":
 
     print("\nDone!")
 
-    print("--------------------\n",
+    print("--------------------\n" + \
           "Starting app...")
 
+    subprocess.run(["python", "crawler/stock_crawler.py"])
+    subprocess.run(["python", "stock_graphql_api/manage.py", "loaddata", "resources/output.json"])
     subprocess.Popen(["python", "stock_graphql_api/manage.py", "runserver"])
-
-    print("\nDone!")
 
     print("--------------------\n" + \
       "Scheduling jobs...")
 
     subprocess.Popen(["python", "scheduled_task.py"])
 
-    print("\nDone!")
-
     print("--------------------\n" + \
           "COMPLETED\n" + \
-          "--------------------\n")
+          "--------------------")
