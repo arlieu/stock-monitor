@@ -81,11 +81,11 @@ class StockCrawler:
             stockDictionary["fields"]["symbol"] = symbol
             self.stocksList.append(stockDictionary)
             count += 1
-            # if count > 10:
-            #     break
             print("Done!")
+            if count > 10:
+                break
 
-        print("\n------------------------------------------\n\nAll stocks loaded!\n")
+        print("------------------------------------------\nAll stocks loaded!\n")
         # currentDateTime = datetime.datetime.now()
         # with open("resources/output-%d-%d-%d_%d-%d-%d.json" %
         #           (currentDateTime.year,

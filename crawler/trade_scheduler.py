@@ -44,11 +44,13 @@ def waitTime():
         currentTime.second * 1000000 + \
         currentTime.microsecond
 
-    dayInterval = abs(day-7) * 86400000000
-    timeInterval = 3600000000
-    if currentTime < startTime:
-        timeInterval = int(integerStartTime)-int(integerCurrentTime)
-    elif currentTime > endTime:
-        timeInterval = int(integerStartTime+(86400000000-integerCurrentTime))
+    timeInterval = 1800000000
+    if integerCurrentTime < integerStartTime:
+        timeInterval = integerStartTime-integerCurrentTime
+    elif integerCurrentTime > integerEndTime:
+        timeInterval = integerStartTime+(86400000000-integerCurrentTime)
+
+    if day-7 > -3:
+        timeInterval = abs(day-7) * 86400000000 + timeInterval
 
     return timeInterval
