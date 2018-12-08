@@ -3,7 +3,7 @@ import subprocess
 
 if __name__ == "__main__":
     print("\n--------------------\n" + \
-          "Migrating models...")
+          "Migrating models...\n")
 
     subprocess.run(["python", "stock_graphql_api/manage.py", "makemigrations"])
     subprocess.run(["python", "stock_graphql_api/manage.py", "migrate"])
@@ -17,12 +17,13 @@ if __name__ == "__main__":
 
     print("\nDone!")
 
-    print("--------------------\n",
+    print("--------------------\n" + \
       "Scheduling jobs...")
 
     subprocess.Popen(["python", "scheduled_task.py"])
 
     print("\nDone!")
 
-    print("--------------------\n",
-          "COMPLETED")
+    print("--------------------\n" + \
+          "COMPLETED\n" + \
+          "--------------------\n")
