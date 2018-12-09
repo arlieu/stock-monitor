@@ -4,15 +4,13 @@ import json
 from enum import Enum
 import datetime
 from django.core.serializers.json import DjangoJSONEncoder
-from .multiprocessor_util import *
 from multiprocessing import *
-import os
-import signal
+
+from .multiprocessor_util import *
 
 
-cpus = 0
-stockAllocation = 0
-remainder = 0
+cpus = updateProcessCount()
+stockAllocation, remainder = distribueStocks(cpus)
 
 
 class DataType(Enum):
@@ -24,35 +22,32 @@ class DataType(Enum):
 
 class StockCrawler:
     def __init__(self):
-        global cpus
-        global stockAllocation
-        global remainder
-        self.stocksList = []
+        freeze_support()
+        self.stocksList = Manager().list()
         self.url = "http://www.nasdaq.com/symbol/"
-
-        cpus = updateProcessCount()
-        stockAllocation, remainder = distribueStocks(cpus)       # Number of cores at disposal
-
-        self.urlSet = {}
+        self.urlList = []
 
         rawStockList = None
         with open("resources/input.txt") as fp:
             rawStockList = fp.readlines()
 
-        for core in range(1, cpus):   # Create url set for each core
-            coreSet = set()
+        for core in range(0, cpus):  # Create url set for each core
+            coreList = []
 
-            for i in range(stockAllocation):    # Number of urls assigned to core
-                index = core * stockAllocation + i - 1
-                try:
+            for i in range(stockAllocation):  # Number of urls assigned to core
+                index = core * stockAllocation + i
+                line = rawStockList[index].strip()
+                ticker = line.split(',')[0]
+                coreList.append(self.url + ticker)
+
+            if core == cpus-1:
+                for i in range(1, remainder+1):
+                    index = core * stockAllocation + 62 + i
                     line = rawStockList[index].strip()
                     ticker = line.split(',')[0]
-                    coreSet.add(self.url + ticker)
-                except Exception as e:
-                    print("INDEX: %d\nCORES: %d\nI: %d" % (index, core, i))
-                    exit(-1)
+                    coreList.append(self.url + ticker)
 
-            self.urlSet["core-" + str(core)] = coreSet
+            self.urlList.append(coreList)
 
         self.keyTransformations = {
             "Best Bid / Ask": "bid/ask",
@@ -99,43 +94,34 @@ class StockCrawler:
         }
 
         self.model = "stocks.Stock"
-
         print("Scanning the S&P 500\n")
 
-        children = []
-        for core in range(1, cpus):
-            print("core-%d started" % (core))
-            print(self.urlSet["core-" + str(core)])
-            child = Process(target=self.createStockData, args=self.urlSet["core-"+str(core)])
-            child.start()
+        p = Pool()
+        p.map(self.createStockData, self.urlList)
+        p.terminate()
+        p.join()
 
-            if current_process().name == 'MainProcess':
-                print("New child: " + str(child))
-                children.append(child)
-
-        for child in children:
-            print("Waiting on child process")
-            child.join()
-
-        print("------------------------------------------\nAll stocks loaded!\n")
+        print("\n------------------------------------------\nAll stocks loaded!\n")
 
         with open("resources/output.json", 'w') as fp:
-            json.dump(self.stocksList, fp, indent=4, ensure_ascii=False, cls=DjangoJSONEncoder)
+            json.dump(list(self.stocksList), fp, indent=4, ensure_ascii=False, cls=DjangoJSONEncoder)
+
         print("View 'resources/output.json' for results")
 
-    def createStockData(self, *args):
-        for url in args:
+    def createStockData(self, urls):
+        for url in urls:
             symbol = url.split('/')[-1]
-            print("Processing %s..." % symbol, end=" ")
+            print("Processing %s..." % symbol)
             stockDictionary = {}
             stockDictionary["pk"] = symbol
             stockDictionary["model"] = self.model
             stockDictionary["fields"] = self.parse(self.openSite(url).text)
             stockDictionary["fields"]["symbol"] = symbol
             self.stocksList.append(stockDictionary)
-            print("Done!")
 
-        multiprocessing.current_process().terminate()
+        # print("Stocks List: " + str(stocksList))
+        # with open("resources/output.json", 'a') as fp:
+        #     json.dump(stocksList, fp, indent=4, ensure_ascii=False, cls=DjangoJSONEncoder)
 
     def openSite(self, url):
         try:
