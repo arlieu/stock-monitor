@@ -1,29 +1,22 @@
 import multiprocessing
-import threading
-
-
-totalCpus = 0
-stockAllocation = 0
-remainder = 0
 
 
 def updateProcessCount():
-    global totalCpus
-    totalCpus = multiprocessing.cpu_count()
+    return multiprocessing.cpu_count()
 
 
-def distribueStocks():
+def distribueStocks(cpus):
     stockCount = 505
-    global totalCpus
-    global stockAllocation
-    global remainder
-    if stockCount % totalCpus > 0:
-        remainder = stockCount % totalCpus
+    remainder = 0
+    if stockCount % cpus > 0:
+        remainder = stockCount % cpus
 
-    stockAllocation = stockCount // totalCpus
+    stockAllocation = stockCount // cpus
+
+    return stockAllocation, remainder
 
 
-if __name__ == "__main__":
-    updateProcessCount()
-    distribueStocks()
-    print("TOTAL CPUS: %d\nSTOCKS PER CORE: %d\nREMAINDER: %d" % (totalCpus, stockAllocation, remainder))
+# if __name__ == "__main__":
+    # updateProcessCount()
+    # distribueStocks()
+    # print("TOTAL CPUS: %d\nSTOCKS PER CORE: %d\nREMAINDER: %d" % (cpus, stockAllocation, remainder))

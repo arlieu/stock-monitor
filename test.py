@@ -1,5 +1,6 @@
 import multiprocessing
+from crawler.stock_crawler import *
 
 
 if __name__ == "__main__":
-    print(multiprocessing.cpu_count())
+    StockCrawler()
