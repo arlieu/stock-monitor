@@ -1,13 +1,15 @@
 import subprocess
 import time
 
-from crawler.trade_scheduler import *
+from crawler.stock_crawler import StockCrawler
+from utils.trade_scheduler import *
 
 
 if __name__ == "__main__":
+    stockCrawler = StockCrawler()
     while True:
-        nextRun = waitTime() / 1000000
-        print("\nNEXT RUN: %d" % (nextRun))
-        time.sleep(nextRun)
-        subprocess.run(["python", "crawler/stock_crawler.py"])
+        stockCrawler.execute()
         subprocess.run(["python", "stock_graphql_api/manage.py", "loaddata", "resources/output.json"])
+        nextRun = waitTime() / 1000000
+        print("\nNEXT RUN in %ds" % (nextRun))
+        time.sleep(nextRun)

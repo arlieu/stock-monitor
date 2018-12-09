@@ -4,9 +4,8 @@ import json
 from enum import Enum
 import datetime
 from django.core.serializers.json import DjangoJSONEncoder
-from multiprocessing import *
 
-from .multiprocessor_util import *
+from utils.multiprocessor_util import *
 
 
 cpus = updateProcessCount()
@@ -23,27 +22,28 @@ class DataType(Enum):
 class StockCrawler:
     def __init__(self):
         freeze_support()
+
         self.stocksList = Manager().list()
+
+        self.inputFile = None
+        with open("resources/input.txt") as fp:
+            self.inputFile = fp.readlines()
+
         self.url = "http://www.nasdaq.com/symbol/"
         self.urlList = []
-
-        rawStockList = None
-        with open("resources/input.txt") as fp:
-            rawStockList = fp.readlines()
-
         for core in range(0, cpus):  # Create url set for each core
             coreList = []
 
             for i in range(stockAllocation):  # Number of urls assigned to core
                 index = core * stockAllocation + i
-                line = rawStockList[index].strip()
+                line = self.inputFile[index].strip()
                 ticker = line.split(',')[0]
                 coreList.append(self.url + ticker)
 
             if core == cpus-1:
                 for i in range(1, remainder+1):
                     index = core * stockAllocation + 62 + i
-                    line = rawStockList[index].strip()
+                    line = self.inputFile[index].strip()
                     ticker = line.split(',')[0]
                     coreList.append(self.url + ticker)
 
@@ -94,7 +94,10 @@ class StockCrawler:
         }
 
         self.model = "stocks.Stock"
-        print("Scanning the S&P 500\n")
+
+
+    def execute(self):
+        print("\nScanning the S&P 500\n")
 
         p = Pool()
         p.map(self.createStockData, self.urlList)
@@ -118,10 +121,6 @@ class StockCrawler:
             stockDictionary["fields"] = self.parse(self.openSite(url).text)
             stockDictionary["fields"]["symbol"] = symbol
             self.stocksList.append(stockDictionary)
-
-        # print("Stocks List: " + str(stocksList))
-        # with open("resources/output.json", 'a') as fp:
-        #     json.dump(stocksList, fp, indent=4, ensure_ascii=False, cls=DjangoJSONEncoder)
 
     def openSite(self, url):
         try:
@@ -223,7 +222,3 @@ class StockCrawler:
                         nasdaq_data[key2] = None
 
         return nasdaq_data
-
-
-if __name__ == "__main__":
-    StockCrawler()
