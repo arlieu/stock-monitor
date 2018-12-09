@@ -5,6 +5,12 @@ from enum import Enum
 import datetime
 from django.core.serializers.json import DjangoJSONEncoder
 
+from utils.multiprocessor_util import *
+
+
+cpus = updateProcessCount()
+stockAllocation, remainder = distribueStocks(cpus)
+
 
 class DataType(Enum):
     TEXT = 1
@@ -15,13 +21,33 @@ class DataType(Enum):
 
 class StockCrawler:
     def __init__(self):
-        self.stocksList = []
+        freeze_support()
+
+        self.stocksList = Manager().list()
+
+        self.inputFile = None
+        with open("resources/input.txt") as fp:
+            self.inputFile = fp.readlines()
+
         self.url = "http://www.nasdaq.com/symbol/"
-        self.urlSet = set()
-        for line in open("resources/input.txt"):
-            line = line.strip()
-            ticker = line.split(',')[0]
-            self.urlSet.add(self.url + ticker)
+        self.urlList = []
+        for core in range(0, cpus):  # Create url set for each core
+            coreList = []
+
+            for i in range(stockAllocation):  # Number of urls assigned to core
+                index = core * stockAllocation + i
+                line = self.inputFile[index].strip()
+                ticker = line.split(',')[0]
+                coreList.append(self.url + ticker)
+
+            if core == cpus-1:
+                for i in range(1, remainder+1):
+                    index = core * stockAllocation + 62 + i
+                    line = self.inputFile[index].strip()
+                    ticker = line.split(',')[0]
+                    coreList.append(self.url + ticker)
+
+            self.urlList.append(coreList)
 
         self.keyTransformations = {
             "Best Bid / Ask": "bid/ask",
@@ -68,38 +94,33 @@ class StockCrawler:
         }
 
         self.model = "stocks.Stock"
-        count = 1
 
-        print("Scanning the S&P 500\n")
-        for url in self.urlSet:
+
+    def execute(self):
+        print("\nScanning the S&P 500\n")
+
+        p = Pool()
+        p.map(self.createStockData, self.urlList)
+        p.terminate()
+        p.join()
+
+        print("\n------------------------------------------\nAll stocks loaded!\n")
+
+        with open("resources/output.json", 'w') as fp:
+            json.dump(list(self.stocksList), fp, indent=4, ensure_ascii=False, cls=DjangoJSONEncoder)
+
+        print("View 'resources/output.json' for results")
+
+    def createStockData(self, urls):
+        for url in urls:
             symbol = url.split('/')[-1]
-            print("Processing " + symbol + " (" + str(count) + "/505)" + "...", end=" ")
+            print("Processing %s..." % symbol)
             stockDictionary = {}
             stockDictionary["pk"] = symbol
             stockDictionary["model"] = self.model
             stockDictionary["fields"] = self.parse(self.openSite(url).text)
             stockDictionary["fields"]["symbol"] = symbol
             self.stocksList.append(stockDictionary)
-            count += 1
-            print("Done!")
-            if count > 10:
-                break
-
-        print("------------------------------------------\nAll stocks loaded!\n")
-        # currentDateTime = datetime.datetime.now()
-        # with open("resources/output-%d-%d-%d_%d-%d-%d.json" %
-        #           (currentDateTime.year,
-        #            currentDateTime.month,
-        #            currentDateTime.day,
-        #            currentDateTime.hour,
-        #            currentDateTime.minute,
-        #            currentDateTime.microsecond),
-        #           'w') as fp:
-        #     json.dump(self.stocksList, fp, indent=4, ensure_ascii=False, cls=DjangoJSONEncoder)
-        # print("View 'resources/output-%s.json' for results" % currentDateTime)
-        with open("resources/output.json", 'w') as fp:
-            json.dump(self.stocksList, fp, indent=4, ensure_ascii=False, cls=DjangoJSONEncoder)
-        print("View 'resources/output.json' for results")
 
     def openSite(self, url):
         try:
@@ -201,7 +222,3 @@ class StockCrawler:
                         nasdaq_data[key2] = None
 
         return nasdaq_data
-
-
-if __name__ == "__main__":
-    StockCrawler()
