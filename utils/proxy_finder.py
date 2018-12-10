@@ -13,10 +13,20 @@ def find_proxies(count=1):
     full_request = uri + query
 
     response = requests.get(full_request).text
-    for proxy in response["data"]:
-        proxy_list += proxy["ipPort"]
+    raw_proxy_list = json.loads(response)
+    retry_count = 0
+    for proxy in raw_proxy_list["data"]:
 
-    return proxy_list
+        if validate_proxy(proxy):
+            proxy_list += proxy["ipPort"]
+        else:
+            retry_count += 1
+
+    retry_proxies = []
+    if retry_count:
+        retry_proxies = find_proxies(retry_count)
+
+    return proxy_list + retry_proxies
 
 
 def validate_proxy(proxy):
@@ -28,10 +38,13 @@ def validate_proxy(proxy):
 
     return True
 
+
 if __name__ == "__main__":
-    proxyList = find_proxies()
+    proxy_list = find_proxies()
     count = 0
-    for proxy in proxyList:
+    for proxy in proxy_list:
         if not validate_proxy(proxy):
             count += 1
             print("PROXY %d NOT WORKING" % count)
+
+    print("ALL PROXIES VALID")
