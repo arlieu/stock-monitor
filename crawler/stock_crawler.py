@@ -129,9 +129,9 @@ class StockCrawler:
     def open_site(self, url, proxies=None):
         try:
             if proxies is None:
-                return requests.get(url, timeout=3)
+                return requests.get(url, timeout=1)
 
-            return requests.get(url, timeout=3, proxies=proxies)
+            return requests.get(url, timeout=1, proxies=proxies)
 
         except requests.exceptions.HTTPError as eh:
             print("Http Error:", eh)
