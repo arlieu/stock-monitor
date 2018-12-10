@@ -1,16 +1,16 @@
 from multiprocessing import *
 
 
-def updateProcessCount():
+def update_process_count():
     return cpu_count()
 
 
-def distribueStocks(cpus):
-    stockCount = 505
+def distribue_stocks(cpus):
+    stock_count = 505
     remainder = 0
-    if stockCount % cpus > 0:
-        remainder = stockCount % cpus
+    if stock_count % cpus > 0:
+        remainder = stock_count % cpus
 
-    stockAllocation = stockCount // cpus
+    stock_allocation = stock_count // cpus
 
-    return stockAllocation, remainder
+    return stock_allocation, remainder

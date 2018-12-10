@@ -1,15 +1,15 @@
 from lxml import html
-import requests
-import json
 from enum import Enum
 import datetime
 from django.core.serializers.json import DjangoJSONEncoder
+from random import randint
 
 from utils.multiprocessor_util import *
+from utils.proxy_finder import *
 
 
-cpus = updateProcessCount()
-stockAllocation, remainder = distribueStocks(cpus)
+cpus = update_process_count()
+stock_allocation, remainder = distribue_stocks(cpus)
 
 
 class DataType(Enum):
@@ -23,31 +23,36 @@ class StockCrawler:
     def __init__(self):
         freeze_support()
 
+        self.proxy_list = []
+        raw_proxy_list = find_proxies(20)
+        for ip in raw_proxy_list:
+            self.proxy_list.append({"http": ip})
+
         self.stocksList = Manager().list()
 
         self.inputFile = None
         with open("resources/input.txt") as fp:
             self.inputFile = fp.readlines()
 
-        self.url = "http://www.nasdaq.com/symbol/"
+        url = "https://www.nasdaq.com/symbol/"
         self.urlList = []
-        for core in range(0, cpus):  # Create url set for each core
-            coreList = []
+        for core in range(0, cpus):
+            core_list = []
 
-            for i in range(stockAllocation):  # Number of urls assigned to core
-                index = core * stockAllocation + i
+            for i in range(stock_allocation):
+                index = core * stock_allocation + i
                 line = self.inputFile[index].strip()
                 ticker = line.split(',')[0]
-                coreList.append(self.url + ticker)
+                core_list.append(url + ticker)
 
             if core == cpus-1:
                 for i in range(1, remainder+1):
-                    index = core * stockAllocation + 62 + i
+                    index = core * stock_allocation + 62 + i
                     line = self.inputFile[index].strip()
                     ticker = line.split(',')[0]
-                    coreList.append(self.url + ticker)
+                    core_list.append(url + ticker)
 
-            self.urlList.append(coreList)
+            self.urlList.append(core_list)
 
         self.keyTransformations = {
             "Best Bid / Ask": "bid/ask",
@@ -95,12 +100,11 @@ class StockCrawler:
 
         self.model = "stocks.Stock"
 
-
     def execute(self):
         print("\nScanning the S&P 500\n")
 
         p = Pool()
-        p.map(self.createStockData, self.urlList)
+        p.map(self.create_stock_data, self.urlList)
         p.terminate()
         p.join()
 
@@ -111,33 +115,38 @@ class StockCrawler:
 
         print("View 'resources/output.json' for results")
 
-    def createStockData(self, urls):
+    def create_stock_data(self, urls):
         for url in urls:
             symbol = url.split('/')[-1]
             print("Processing %s..." % symbol)
-            stockDictionary = {}
-            stockDictionary["pk"] = symbol
-            stockDictionary["model"] = self.model
-            stockDictionary["fields"] = self.parse(self.openSite(url).text)
-            stockDictionary["fields"]["symbol"] = symbol
-            self.stocksList.append(stockDictionary)
+            stock_dictionary = dict()
+            stock_dictionary["pk"] = symbol
+            stock_dictionary["model"] = self.model
+            stock_dictionary["fields"] = self.parse(self.open_site(url).text)
+            stock_dictionary["fields"]["symbol"] = symbol
+            self.stocksList.append(stock_dictionary)
 
-    def openSite(self, url):
+    def open_site(self, url, proxies=None):
         try:
-            return requests.get(url)
+            if proxies is None:
+                return requests.get(url, timeout=1)
+
+            return requests.get(url, timeout=1, proxies=proxies)
+
         except requests.exceptions.HTTPError as eh:
             print("Http Error:", eh)
-        except requests.exceptions.ConnectionError as ec:
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as ec:
             print("Error Connecting:", ec)
-        except requests.exceptions.Timeout as et:
-            print("Timeout Error:", et)
+            print("Changing proxy...")
+            return self.open_site(url, self.proxy_list[randint(0, 19)])
+
         except requests.exceptions.RequestException as e:
             print("Server Error:", e)
 
-    def transformKey(self, key):
+    def transform_key(self, key):
         return self.keyTransformations.get(key)
 
-    def transformValue(self, key, value):
+    def transform_value(self, key, value):
         transform = self.valueTransformations[key]
         if transform == DataType.TEXT:
             return value
@@ -146,8 +155,8 @@ class StockCrawler:
         elif transform == DataType.BIGINTEGER:
             return int(value)
         elif transform == DataType.DATE:
-            dateParts = list(map(int, value.split('/')))
-            return datetime.date(dateParts[2], dateParts[0], dateParts[1])
+            date_parts = list(map(int, value.split('/')))
+            return datetime.date(date_parts[2], date_parts[0], date_parts[1])
         else:
             return None
 
@@ -185,10 +194,10 @@ class StockCrawler:
             key = ''.join(key).strip()
             key1, key2 = "", ""
             value1, value2 = None, None
-            slashCount = key.count('/')
+            slash_count = key.count('/')
             value = ' '.join(''.join(value).split()).replace(",", "").replace("$", "").replace("%", "")
 
-            if slashCount == 1 and "P/E" not in key:
+            if slash_count == 1 and "P/E" not in key:
                 if "Best" in key:
                     key1 = "bid"
                     key2 = "ask"
@@ -203,21 +212,22 @@ class StockCrawler:
                 value2 = value.split('/')[1].strip()
 
             if value1 is None:
-                trueKey = self.transformKey(key)
-                if trueKey is not None:
+                true_key = self.transform_key(key)
+                if true_key is not None:
                     try:
-                        nasdaq_data[trueKey] = self.transformValue(trueKey, value)
+                        nasdaq_data[true_key] = self.transform_value(true_key, value)
                     except Exception as e:
-                        nasdaq_data[trueKey] = None
+                        nasdaq_data[true_key] = None
             else:
                 if key1 is not None:
                     try:
-                        nasdaq_data[key1] = self.transformValue(key1, value1)
+                        nasdaq_data[key1] = self.transform_value(key1, value1)
                     except Exception as e1:
                         nasdaq_data[key1] = None
+
                 if key2 is not None:
                     try:
-                        nasdaq_data[key2] = self.transformValue(key2, value2)
+                        nasdaq_data[key2] = self.transform_value(key2, value2)
                     except Exception as e2:
                         nasdaq_data[key2] = None
 
