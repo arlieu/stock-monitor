@@ -30,7 +30,7 @@ def find_proxies(count=1):
 
 
 def validate_proxy(proxy):
-    url = "https://www.google.com/"
+    url = "https://www.nasdaq.com/symbol/"
     proxies = {"http": proxy}
     status_code = requests.get(url, proxies=proxies).status_code
     if status_code < 200 or status_code > 299:

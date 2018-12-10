@@ -1,11 +1,11 @@
 from lxml import html
-import requests
-import json
 from enum import Enum
 import datetime
 from django.core.serializers.json import DjangoJSONEncoder
+from random import randint
 
 from utils.multiprocessor_util import *
+from utils.proxy_finder import *
 
 
 cpus = update_process_count()
@@ -23,29 +23,34 @@ class StockCrawler:
     def __init__(self):
         freeze_support()
 
+        self.proxy_list = []
+        raw_proxy_list = find_proxies(20)
+        for ip in raw_proxy_list:
+            self.proxy_list.append({"http": ip})
+
         self.stocksList = Manager().list()
 
         self.inputFile = None
         with open("resources/input.txt") as fp:
             self.inputFile = fp.readlines()
 
-        self.url = "http://www.nasdaq.com/symbol/"
+        url = "https://www.nasdaq.com/symbol/"
         self.urlList = []
-        for core in range(0, cpus):  # Create url set for each core
+        for core in range(0, cpus):
             core_list = []
 
-            for i in range(stock_allocation):  # Number of urls assigned to core
+            for i in range(stock_allocation):
                 index = core * stock_allocation + i
                 line = self.inputFile[index].strip()
                 ticker = line.split(',')[0]
-                core_list.append(self.url + ticker)
+                core_list.append(url + ticker)
 
             if core == cpus-1:
                 for i in range(1, remainder+1):
                     index = core * stock_allocation + 62 + i
                     line = self.inputFile[index].strip()
                     ticker = line.split(',')[0]
-                    core_list.append(self.url + ticker)
+                    core_list.append(url + ticker)
 
             self.urlList.append(core_list)
 
@@ -121,15 +126,20 @@ class StockCrawler:
             stock_dictionary["fields"]["symbol"] = symbol
             self.stocksList.append(stock_dictionary)
 
-    def open_site(self, url):
+    def open_site(self, url, proxies=None):
         try:
-            return requests.get(url)
+            if proxies is None:
+                return requests.get(url, timeout=3)
+
+            return requests.get(url, timeout=3, proxies=proxies)
+
         except requests.exceptions.HTTPError as eh:
             print("Http Error:", eh)
-        except requests.exceptions.ConnectionError as ec:
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as ec:
             print("Error Connecting:", ec)
-        except requests.exceptions.Timeout as et:
-            print("Timeout Error:", et)
+            print("Changing proxy...")
+            return self.open_site(url, self.proxy_list[randint(0, 19)])
+
         except requests.exceptions.RequestException as e:
             print("Server Error:", e)
 
@@ -207,21 +217,18 @@ class StockCrawler:
                     try:
                         nasdaq_data[true_key] = self.transform_value(true_key, value)
                     except Exception as e:
-                        print(e)
                         nasdaq_data[true_key] = None
             else:
                 if key1 is not None:
                     try:
                         nasdaq_data[key1] = self.transform_value(key1, value1)
                     except Exception as e1:
-                        print(e1)
                         nasdaq_data[key1] = None
 
                 if key2 is not None:
                     try:
                         nasdaq_data[key2] = self.transform_value(key2, value2)
                     except Exception as e2:
-                        print(e2)
                         nasdaq_data[key2] = None
 
         return nasdaq_data
