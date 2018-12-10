@@ -10,6 +10,6 @@ if __name__ == "__main__":
     while True:
         stockCrawler.execute()
         subprocess.run(["python", "stock_graphql_api/manage.py", "loaddata", "resources/output.json"])
-        nextRun = waitTime() / 1000000
-        print("\nNEXT RUN in %ds" % (nextRun))
-        time.sleep(nextRun)
+        next_run = wait_time() / 1000000
+        print("\nNEXT RUN in %ds" % next_run)
+        time.sleep(next_run)
