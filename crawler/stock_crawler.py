@@ -6,6 +6,7 @@ from random import randint
 
 from utils.multiprocessor_util import *
 from utils.proxy_finder import *
+from utils.spoofing_util import *
 
 
 cpus = update_process_count()
@@ -27,6 +28,8 @@ class StockCrawler:
         raw_proxy_list = find_proxies(20)
         for ip in raw_proxy_list:
             self.proxy_list.append({"http": ip})
+
+        self.header_list = set_headers("user-agent")
 
         self.stocksList = Manager().list()
 
@@ -82,6 +85,7 @@ class StockCrawler:
             "target": DataType.DECIMAL,
             "day_high": DataType.DECIMAL,
             "day_low": DataType.DECIMAL,
+            "day_low": DataType.DECIMAL,
             "share_volume": DataType.BIGINTEGER,
             "average_volume": DataType.BIGINTEGER,
             "previous_close": DataType.DECIMAL,
@@ -129,9 +133,9 @@ class StockCrawler:
     def open_site(self, url, proxies=None):
         try:
             if proxies is None:
-                return requests.get(url, timeout=1)
+                return requests.get(url, headers=self.header_list[randint(0, 19)], timeout=1)
 
-            return requests.get(url, timeout=1, proxies=proxies)
+            return requests.get(url, headers=self.header_list[randint(0, 19)], timeout=1, proxies=proxies)
 
         except requests.exceptions.HTTPError as eh:
             print("Http Error:", eh)
