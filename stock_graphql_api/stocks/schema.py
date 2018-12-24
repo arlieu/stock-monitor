@@ -3,6 +3,7 @@ from graphene_django import DjangoObjectType
 from django.db.models import Q
 
 from .models import Stock
+from .converter import BigInteger
 
 
 class StockType(DjangoObjectType):
@@ -32,12 +33,12 @@ class StockInput(graphene.InputObjectType):
     target = graphene.Float(required=False)
     day_high = graphene.Float(required=False)
     day_low = graphene.Float(required=False)
-    share_volume = graphene.Int(required=False)
-    average_volume = graphene.Int(required=False)
+    share_volume = graphene.Field(BigInteger, required=False)
+    average_volume = graphene.Field(BigInteger, required=False)
     previous_close = graphene.Float(required=False)
     year_high = graphene.Float(required=False)
     year_low = graphene.Float(required=False)
-    market_cap = graphene.Int(required=False)
+    market_cap = graphene.Field(BigInteger, required=False)
     pe = graphene.Float(required=False)
     forward_pe = graphene.Float(required=False)
     eps = graphene.Float(required=False)

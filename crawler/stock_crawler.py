@@ -184,8 +184,8 @@ class StockCrawler:
 
         nasdaq_data = {
             "name": company_name,
-            "open_price": float(open_price) if open_price is not None else None,
-            "close_price": float(close_price) if open_price is not None else None,
+            "open_price": float(open_price) if open_price is not None and open_price != 'N/A' else None,
+            "close_price": float(close_price) if close_price is not None and close_price != 'N/A' else None,
         }
 
         for i in key_stock_table:
