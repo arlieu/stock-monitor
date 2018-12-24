@@ -113,6 +113,8 @@ class StockCrawler:
         with open("resources/output.json", 'w') as fp:
             json.dump(list(self.stocksList), fp, indent=4, ensure_ascii=False, cls=DjangoJSONEncoder)
 
+        self.stocksList = []
+
         print("View 'resources/output.json' for results")
 
     def create_stock_data(self, urls):
