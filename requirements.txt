@@ -1,6 +1,6 @@
 certifi==2018.10.15
 chardet==3.0.4
-Django==2.0.8
+Django==2.2.10
 django-environ==0.4.5
 django-filter==1.1.0
 django-graphql-jwt==0.1.5
