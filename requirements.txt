@@ -13,7 +13,7 @@ idna==2.7
 iso8601==0.1.12
 lxml==4.2.5
 promise==2.2.1
-PyJWT==1.6.4
+PyJWT==2.4.0
 pytz==2018.7
 requests==2.20.1
 Rx==1.6.1
