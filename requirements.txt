@@ -11,7 +11,7 @@ graphql-core==2.1
 graphql-relay==0.4.5
 idna==2.7
 iso8601==0.1.12
-lxml==4.2.5
+lxml==4.9.1
 promise==2.2.1
 PyJWT==1.6.4
 pytz==2018.7
